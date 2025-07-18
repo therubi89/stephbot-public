@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StephBot - Powered by NTNL</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span class="chat-title">StephBot</span>
+      <span class="chat-close" onclick="closeChat()">✖</span>
+    </div>
+
+    <div id="chatLog"></div>
+
+    <div class="input-wrapper">
+      <div class="input-row">
+        <input id="userInput" type="text" placeholder="Ask StephBot" />
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="startMic()">🎙️</button>
+      </div>
+    </div>
+
+    <footer id="footer">🌱 Powered by SolaceAI</footer>
+    <audio id="voicePlayer" controls style="display:none;"></audio>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
