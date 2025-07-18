@@ -1,9 +1,5 @@
 // netlify/functions/speak.js
 
-// Change this line:
-// const fetch = require('node-fetch');
-
-// To this dynamic import:
 let fetch;
 (async () => {
   fetch = (await import('node-fetch')).default;
@@ -70,24 +66,27 @@ exports.handler = async function(event, context) {
     }
 
     console.log("ElevenLabs call successful, processing audio.");
-    const audioBlob = await elevenLabsResponse.buffer();
+    // --- CHANGE START ---
+    const audioArrayBuffer = await elevenLabsResponse.arrayBuffer(); // Use arrayBuffer()
+    const audioBuffer = Buffer.from(audioArrayBuffer); // Convert ArrayBuffer to Node.js Buffer
+    // --- CHANGE END ---
 
-    if (audioBlob.length === 0) {
+    if (audioBuffer.length === 0) {
         console.error("ElevenLabs returned an empty audio blob.");
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "ElevenLabs returned empty audio data." })
         };
     }
-    console.log(`Audio blob size: ${audioBlob.length} bytes`);
+    console.log(`Audio blob size: ${audioBuffer.length} bytes`);
 
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "audio/mpeg",
-        "Content-Length": audioBlob.length,
+        "Content-Length": audioBuffer.length,
       },
-      body: audioBlob.toString('base64'),
+      body: audioBuffer.toString('base64'),
       isBase64Encoded: true,
     };
 
