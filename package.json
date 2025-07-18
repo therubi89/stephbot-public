@@ -1,0 +1,24 @@
+{
+  "name": "stephbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/therubi89/stephbot-public.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/therubi89/stephbot-public/issues"
+  },
+  "homepage": "https://github.com/therubi89/stephbot-public#readme",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
