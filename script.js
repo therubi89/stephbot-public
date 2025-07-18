@@ -95,20 +95,21 @@ function cleanTextForTTS(raw) {
 }
 
 // ElevenLabs with fallback
+
 async function speak(text) {
-  const ELEVENLABS_API_KEY = "api";
-  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; //9PSFVIeBFh3iQoQKBzQF
+  // const ELEVENLABS_API_KEY = "myapi"; // THIS LINE IS NO LONGER NEEDED AND SHOULD BE REMOVED
+  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; // Keep this as it's part of the request body
 
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    // Call your Netlify Function instead of ElevenLabs directly
+    const response = await fetch(`/.netlify/functions/speak`, { // Adjust path if your function name is different
       method: "POST",
       headers: {
-        "Accept": "audio/mpeg",
-        "xi-api-key": ELEVENLABS_API_KEY,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         text: text,
+        voiceId: voiceId, // Pass voiceId to the function
         model_id: "eleven_monolingual_v1",
         voice_settings: {
           stability: 0.3,
@@ -118,19 +119,21 @@ async function speak(text) {
     });
 
     if (!response.ok) {
-      console.warn("ElevenLabs failed, falling back to browser TTS");
+      const errorData = await response.json(); // Assuming JSON error from your function
+      console.warn("Netlify Function or ElevenLabs failed:", errorData.error);
       fallbackTTS(text);
       return;
     }
 
+    // The Netlify function now sends back a base64 encoded audio blob
     const audioData = await response.blob();
     const audioURL = URL.createObjectURL(audioData);
     const player = document.getElementById("voicePlayer");
     player.src = audioURL;
-    // player.style.display = "block"; // <-- COMMENT OUT or REMOVE THIS LINE
+    // player.style.display = "block"; // commented out or removed
     player.play();
   } catch (error) {
-    console.error("ElevenLabs error:", error);
+    console.error("Error calling Netlify Function:", error);
     fallbackTTS(text);
   }
 }
