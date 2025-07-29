@@ -1,12 +1,15 @@
+// Initialize Web Speech Recognition API
 const recognition = new window.webkitSpeechRecognition();
 recognition.lang = "en-US";
 
+// Event listener for speech recognition results
 recognition.onresult = function(event) {
   const input = event.results[0][0].transcript;
   document.getElementById("userInput").value = input;
   sendMessage();
 };
 
+// Function to start microphone input for speech recognition
 function startMic() {
   const micBtn = document.querySelector('button[onclick="startMic()"]');
   micBtn.innerText = "🎤 Listening...";
@@ -20,21 +23,152 @@ function startMic() {
   };
 }
 
+// Function to display a typing indicator for StephBot
 function showTypingIndicator() {
   const log = document.getElementById("chatLog");
   const typingBubble = document.createElement("div");
-  typingBubble.className = "message bot";
-  typingBubble.id = "typingIndicator";
+  typingBubble.className = "message bot"; // Apply bot message styling
+  typingBubble.id = "typingIndicator"; // Assign ID for easy removal
   typingBubble.innerHTML = `<em>StephBot is typing...</em>`;
   log.appendChild(typingBubble);
   log.scrollTop = log.scrollHeight;
 }
 
+// Function to remove the typing indicator
 function removeTypingIndicator() {
   const typingBubble = document.getElementById("typingIndicator");
   if (typingBubble) typingBubble.remove();
 }
 
+// Global variable to manage conversational state for practice scenarios
+let conversationState = {
+  mode: "normal", // "normal", "prompt_practice", "ethics_dilemma", "sermon_prompt_assist"
+  step: 0,
+  data: {} // To store context for multi-turn interactions
+};
+
+// --- CORE: Internal Knowledge Base for Training Academy Content ---
+function getTrainingResponse(input) {
+  const lowerInput = input.toLowerCase();
+
+  // Reset conversation state if user starts a new general query
+  if (conversationState.mode !== "normal" && !lowerInput.includes("practice") && !lowerInput.includes("help me start")) {
+    // If not a continuation of a practice, reset
+    // This is a simple heuristic; more complex bots might need explicit "reset" commands
+    conversationState = { mode: "normal", step: 0, data: {} };
+  }
+
+  // --- Track 2: Tools Onboarding Responses ---
+  if (lowerInput.includes("dashboard") || lowerInput.includes("overview")) {
+    return "The Solace AI Dashboard is your central hub for ministry insights. It shows key AI-driven metrics like prompt usage, giving you a quick overview of how AI is being used. You can also find notifications and quick access to all your AI tools here.";
+  }
+  if (lowerInput.includes("workflow") || lowerInput.includes("automate") || lowerInput.includes("bulletin announcement")) {
+    return "AI Workflows help you automate repetitive ministry tasks, like drafting weekly bulletin announcements. You can create a workflow, add an 'AI Content Generation' step with a specific prompt (e.g., 'draft a concise bulletin announcement'), then set it to run on a schedule. Remember, all AI-generated content is human-reviewed!";
+  }
+  if (lowerInput.includes("analytics") || lowerInput.includes("metrics") || lowerInput.includes("impact")) {
+    return "The Analytics Panel gives you insights into how your AI tools are performing. You can see AI content engagement (like email open rates) and prompt usage frequency. This helps you understand what's resonating and where AI is providing the most value. You can also export basic reports.";
+  }
+  if (lowerInput.includes("stephbot setup") || lowerInput.includes("configure stephbot") || lowerInput.includes("train stephbot") || lowerInput.includes("my voice")) {
+    return "To set up StephBot, go to 'AI Agents' in your menu. You can customize her persona (friendly, formal, pastoral) and 'train' her by uploading your church's FAQs or specific denominational info. The more data you provide, the better she can assist your unique ministry 24/7!";
+  }
+  if (lowerInput.includes("feedback") || lowerInput.includes("bug") || lowerInput.includes("suggestion") || lowerInput.includes("improve product")) {
+    return "Your feedback is vital for Solace AI's continuous improvement! You can provide feedback using the 'Provide Feedback' button below the chat, through quick survey pop-ups, or by contacting support directly. Your input helps us fix bugs and develop new features for ministry.";
+  }
+
+  // --- Cross-Cutting: StephBot AI Content Integration (Tracks 4, 5, 6, 10) ---
+
+  // Track 5: AI Fluency Support
+  if (lowerInput.includes("what is ai") || lowerInput.includes("generative ai")) {
+    return "Generative AI, like Solace AI, is a tool that can create new content (text, ideas) based on your instructions. Think of it as a very knowledgeable but naive assistant. It learns from patterns in vast amounts of data to generate responses.";
+  }
+  if (lowerInput.includes("4ds") || lowerInput.includes("four ds") || lowerInput.includes("ai fluency")) {
+    return "The AI Fluency Journey focuses on the '4 Ds': Delegation (what AI can do), Description (how to prompt AI clearly), Discernment (critically evaluating AI output), and Diligence (responsible follow-through). These are key to effective and ethical AI use in ministry. Andy Morgan will guide you through this module!";
+  }
+  if (lowerInput.includes("example of delegation")) {
+    return "Delegation is deciding what tasks AI can handle. For example, delegating the first draft of a weekly bulletin announcement or a sermon outline to AI, rather than writing it from scratch. You still review and refine, but AI handles the initial heavy lifting.";
+  }
+  if (lowerInput.includes("practice description")) {
+    conversationState.mode = "prompt_practice";
+    conversationState.step = 1;
+    return "Great! Let's practice 'Description'. Imagine you need an AI to draft a short social media post for your church's upcoming potluck. Your first prompt is 'Write a social media post about a potluck.' How can you make that prompt more *descriptive* to get a better output? Try adding details about the event.";
+  }
+
+  // Track 6: Prompt Engineering Support
+  if (lowerInput.includes("how to write a good prompt") || lowerInput.includes("prompt engineering")) {
+    return "Prompt engineering is the art of crafting effective instructions for AI. A good prompt needs context, a clear persona (e.g., 'Act as a youth pastor'), desired tone, format, and specific constraints. The more detail you give, the better the AI's output will be. Andy Morgan's module will teach you how to master this for ministry tasks!";
+  }
+  if (lowerInput.includes("what's a persona") || lowerInput.includes("persona priming")) {
+    return "A 'persona' in prompting is telling the AI to adopt a specific role or identity, like 'Act as a seasoned theologian' or 'Respond as a friendly church administrator.' This helps the AI tailor its language and approach to your needs.";
+  }
+  if (lowerInput.includes("can you help me start a sermon prompt")) {
+    conversationState.mode = "sermon_prompt_assist";
+    conversationState.step = 1;
+    return "Absolutely! Let's start building a sermon prompt. What scripture passage are you preaching on this week?";
+  }
+
+  // Track 4: Ethics & Formation Support
+  if (lowerInput.includes("ethical concerns") || lowerInput.includes("responsible ai") || lowerInput.includes("is ai biased")) {
+    return "Ethical AI in Ministry is crucial. Key concerns include: **Bias & Fairness** (AI reflecting societal biases), **Transparency** (understanding AI's logic), **Accountability** (human responsibility), **Privacy**, **Spiritual Dependence**, and **Misinformation**. Andy Morgan's module will help you navigate these complex areas responsibly.";
+  }
+  if (lowerInput.includes("ethical dilemma") || lowerInput.includes("practice ethics")) {
+    conversationState.mode = "ethics_dilemma";
+    conversationState.step = 1;
+    return "Okay, let's consider an ethical dilemma. Imagine AI drafts a prayer for a sensitive congregational situation. What ethical principle from our training should you apply *first* when reviewing it?";
+  }
+
+  // Track 10: Analytics & Case Studies Support
+  if (lowerInput.includes("how is my church using ai") || lowerInput.includes("ai usage data")) {
+    return "I can give you some insights based on your church's simulated usage data. For detailed, real-time metrics, you'll want to check your 'Impact Dashboard' in the Solace platform. What specific data are you curious about?";
+  }
+  if (lowerInput.includes("most popular ai-generated content")) {
+    // This would ideally pull from a real database, but for mock-up, use a placeholder
+    return "Based on simulated data, your church's most popular AI-generated content recently has been 'Weekly Bulletin Announcements' and 'Social Media Posts for Events'. This suggests AI is helping you most with communications!";
+  }
+  if (lowerInput.includes("how can i see our ai impact")) {
+    return "You can see your AI's impact in the 'Impact Dashboard' and 'Analytics Panel' within the Solace platform. These show metrics like prompt usage, content engagement, and help you track your 'Ministry Wins'.";
+  }
+
+  // --- Conversational State-based Responses (for multi-turn practice) ---
+  if (conversationState.mode === "prompt_practice") {
+    if (conversationState.step === 1) {
+      conversationState.step = 2;
+      conversationState.data.initialPrompt = input;
+      return "Good start! Now, what's the *tone* you're aiming for? Is it casual, formal, exciting, or something else?";
+    } else if (conversationState.step === 2) {
+      conversationState.mode = "normal"; // Reset state
+      return `Excellent! By adding details like '${conversationState.data.initialPrompt}' and a '${input}' tone, your prompt is much more descriptive. This is great 'Description' in action!`;
+    }
+  }
+
+  if (conversationState.mode === "sermon_prompt_assist") {
+    if (conversationState.step === 1) {
+      conversationState.data.scripture = input;
+      conversationState.step = 2;
+      return `Okay, ${input}. Who is the target audience for this sermon (e.g., youth, general congregation, new members)?`;
+    } else if (conversationState.step === 2) {
+      conversationState.data.audience = input;
+      conversationState.step = 3;
+      return `Got it. What are 2-3 key theological points or themes you want to ensure are included in the sermon outline?`;
+    } else if (conversationState.step === 3) {
+      conversationState.data.themes = input;
+      conversationState.mode = "normal"; // Reset state
+      return `Perfect! With scripture: ${conversationState.data.scripture}, audience: ${conversationState.data.audience}, and themes: ${conversationState.data.themes}, you have a strong prompt for a sermon outline. Now you can use the 'Sermon Outline Generator' template in Solace AI!`;
+    }
+  }
+
+  if (conversationState.mode === "ethics_dilemma") {
+    if (conversationState.step === 1) {
+      conversationState.mode = "normal"; // Reset state after first response
+      return `That's a very insightful point! When reviewing AI-drafted prayers for sensitive situations, ensuring **Spiritual Authenticity** and **Human Accountability** are paramount. You must discern if it truly reflects your pastoral heart and theological stance. How would you ensure transparency if you used parts of it?`;
+    }
+  }
+
+  // Default fallback if no specific training response or ongoing conversation state
+  return null;
+}
+// --- END CORE: Internal Knowledge Base ---
+
+// Function to send a message
 async function sendMessage() {
   const input = document.getElementById("userInput").value.trim();
   if (!input) return;
@@ -42,49 +176,55 @@ async function sendMessage() {
   appendMessage("You", input);
   document.getElementById("userInput").value = "";
 
+  showTypingIndicator();
+
   let reply = "";
 
-  // Construct the query with a system prompt for brevity
-  const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
+  // Prioritize internal training responses
+  const trainingResponse = getTrainingResponse(input);
+  if (trainingResponse) {
+    reply = trainingResponse;
+  } else {
+    // Fallback to NTNL bot for general questions
+    const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
+    try {
+      const response = await fetch("https://ntnl.solace-ai.com/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: queryWithPrompt })
+      });
 
-  // ntnl bot
-  try {
-    const response = await fetch("https://ntnl.solace-ai.com/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Send the modified query to the NTNL API
-      body: JSON.stringify({ query: queryWithPrompt })
-    });
-
-    if (!response.ok) {
-      reply = "Sorry, I couldn't reach the Solace knowledge base right now.";
-    } else {
-      const data = await response.json();
-      console.log("NTNL returned:", data);
-      reply = data.response?.trim() || "Sorry, I couldn't find an answer for that.";
+      if (!response.ok) {
+        reply = "Sorry, I couldn't reach the Solace knowledge base right now. Please try again later.";
+      } else {
+        const data = await response.json();
+        console.log("NTNL returned:", data);
+        reply = data.response?.trim() || "Sorry, I couldn't find an answer for that in my general knowledge base.";
+      }
+    } catch (error) {
+      console.error("NTNL API error:", error);
+      reply = "There was an error connecting to Solace NTNL for general questions.";
     }
-  } catch (error) {
-    console.error("NTNL API error:", error);
-    reply = "There was an error connecting to Solace NTNL.";
   }
 
-  // Display the text immediately after receiving it from NTNL
+  removeTypingIndicator();
   appendMessage("StephBot", reply);
-
-  // Then, initiate the text-to-speech
   speak(cleanTextForTTS(reply));
 }
 
+// Function to append messages to the chat log
 function appendMessage(sender, text) {
   const log = document.getElementById("chatLog");
   const bubble = document.createElement("div");
 
+  // Apply classes based on sender for styling (defined in CSS)
   bubble.className = sender === "You" ? "message user" : "message bot";
   bubble.innerHTML = `<strong>${sender}:</strong> ${text}`;
   log.appendChild(bubble);
   log.scrollTop = log.scrollHeight;
 }
 
+// Function to clean text for Text-to-Speech (removes markdown, URLs, emojis)
 function cleanTextForTTS(raw) {
   let cleaned = raw;
   cleaned = cleaned.replace(/\*\*|__|\*|_|~~|`/g, '');
@@ -94,43 +234,33 @@ function cleanTextForTTS(raw) {
   return cleaned;
 }
 
-// ElevenLabs with fallback
-
+// ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
-  // const ELEVENLABS_API_KEY = "myapi"; // THIS LINE IS NO LONGER NEEDED AND SHOULD BE REMOVED
-  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; // Keep this as it's part of the request body
+  const voiceId = "9PSFVIeBFh3iQoQKBzQh"; // ElevenLabs Voice ID (Kore voice)
 
   try {
-    // Call your Netlify Function instead of ElevenLabs directly
-    const response = await fetch(`/.netlify/functions/speak`, { // Adjust path if your function name is different
+    const response = await fetch(`/.netlify/functions/speak`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: text,
-        voiceId: voiceId, // Pass voiceId to the function
+        voiceId: voiceId,
         model_id: "eleven_monolingual_v1",
-        voice_settings: {
-          stability: 0.3,
-          similarity_boost: 0.75
-        }
+        voice_settings: { stability: 0.3, similarity_boost: 0.75 }
       })
     });
 
     if (!response.ok) {
-      const errorData = await response.json(); // Assuming JSON error from your function
+      const errorData = await response.json();
       console.warn("Netlify Function or ElevenLabs failed:", errorData.error);
       fallbackTTS(text);
       return;
     }
 
-    // The Netlify function now sends back a base64 encoded audio blob
     const audioData = await response.blob();
     const audioURL = URL.createObjectURL(audioData);
     const player = document.getElementById("voicePlayer");
     player.src = audioURL;
-    // player.style.display = "block"; // commented out or removed
     player.play();
   } catch (error) {
     console.error("Error calling Netlify Function:", error);
@@ -138,6 +268,7 @@ async function speak(text) {
   }
 }
 
+// Fallback Text-to-Speech using browser's SpeechSynthesis API
 function fallbackTTS(text) {
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
@@ -146,12 +277,41 @@ function fallbackTTS(text) {
   speechSynthesis.speak(msg);
 }
 
+// --- NEW: Feedback Modal Functions ---
+function showFeedbackModal() {
+  document.getElementById("feedbackModal").classList.remove("hidden");
+}
+
+function closeFeedbackModal() {
+  document.getElementById("feedbackModal").classList.add("hidden");
+  document.getElementById("feedbackText").value = ""; // Clear textarea on close
+}
+
+function submitFeedback() {
+  const feedbackText = document.getElementById("feedbackText").value.trim();
+  if (feedbackText) {
+    // --- IMPORTANT: Integrate Firestore here for persistent storage ---
+    // For now, it logs to console and gives a bot response
+    console.log("User Feedback Submitted:", feedbackText);
+    appendMessage("StephBot", "Thank you for your feedback! We truly appreciate your input and it helps us improve Solace AI for ministry.");
+    speak("Thank you for your feedback! We truly appreciate your input and it helps us improve Solace AI for ministry.");
+  } else {
+    appendMessage("StephBot", "Please type some feedback before submitting.");
+    speak("Please type some feedback before submitting.");
+  }
+  closeFeedbackModal();
+}
+// --- END NEW: Feedback Modal Functions ---
+
+
+// Initial message from StephBot when the page loads
 window.onload = function () {
-  const opening = "Hi! I’m StephBot. How can I help you today?";
+  const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
   appendMessage("StephBot", opening);
   speak(cleanTextForTTS(opening));
 };
 
+// Function to close the chat container (if needed, currently hides it)
 function closeChat() {
   document.querySelector(".chat-container").style.display = "none";
 }

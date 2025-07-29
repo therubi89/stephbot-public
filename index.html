@@ -2,28 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>StephBot - Powered by NTNL</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StephBot - Solace Training Academy</title>
+  <!-- Google Fonts: Inter for modern UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN for modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom CSS overrides or additions not easily done with Tailwind */
+    body {
+      font-family: 'Inter', sans-serif; /* Ensure Inter font is applied */
+    }
+    /* Styles for chat bubbles - Tailwind classes are applied in JS, but base here */
+    .message {
+      max-width: 70%;
+      padding: 10px 15px;
+      margin: 8px 0;
+      border-radius: 20px;
+      line-height: 1.4em;
+    }
+    .user {
+      background: #6a11cb; /* Original user color */
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 0; /* Rounded corners for chat bubble */
+    }
+    .bot {
+      background: #eee; /* Original bot color */
+      color: #333;
+      align-self: flex-start;
+      border-bottom-left-radius: 0; /* Rounded corners for chat bubble */
+    }
+    /* Typing indicator specific styling */
+    #typingIndicator {
+      background: #e0e0e0; /* Lighter grey for typing indicator */
+      color: #666;
+      align-self: flex-start;
+      padding: 10px 15px;
+      margin: 8px 0;
+      border-radius: 20px;
+      border-bottom-left-radius: 0;
+      font-style: italic;
+    }
+    /* Modal overlay and content styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .modal-content {
+      background-color: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+    /* Hide default audio player controls */
+    audio {
+      display: none !important;
+    }
+  </style>
 </head>
-<body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <span class="chat-title">StephBot</span>
-      <span class="chat-close" onclick="closeChat()">✖</span>
+<body class="bg-gradient-to-br from-purple-700 to-blue-500 min-h-screen flex flex-col justify-center items-center p-4">
+  <div class="chat-container bg-white rounded-xl shadow-2xl flex flex-col max-w-md w-full h-[600px] overflow-hidden">
+    <div class="chat-header bg-gradient-to-r from-purple-700 to-blue-500 text-white flex justify-between items-center p-4 rounded-t-xl">
+      <span class="chat-title text-xl font-bold">StephBot</span>
+      <button onclick="closeChat()" class="text-white text-2xl font-bold hover:text-gray-200 transition-colors duration-300 focus:outline-none">
+        &times;
+      </button>
     </div>
 
-    <div id="chatLog"></div>
+    <div id="chatLog" class="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col space-y-3">
+      <!-- Chat messages will be appended here -->
+    </div>
 
-    <div class="input-wrapper">
-      <div class="input-row">
-        <input id="userInput" type="text" placeholder="Ask StephBot" />
-        <button onclick="sendMessage()">Send</button>
-        <button onclick="startMic()">🎙️</button>
+    <div class="input-wrapper p-4 bg-white border-t border-gray-200">
+      <div class="input-row flex gap-2 mb-3">
+        <input id="userInput" type="text" placeholder="Ask StephBot..." class="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200" />
+        <button onclick="sendMessage()" class="bg-purple-700 hover:bg-purple-800 text-white p-3 rounded-full font-semibold transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+          Send
+        </button>
+        <button onclick="startMic()" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full font-semibold transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          🎙️
+        </button>
+      </div>
+      <button onclick="showFeedbackModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-full text-sm font-medium transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+        Provide Feedback
+      </button>
+    </div>
+
+    <footer id="footer" class="text-center text-gray-500 text-xs p-2 bg-white border-t border-gray-100">
+      🌱 Powered by SolaceAI
+    </footer>
+    <audio id="voicePlayer" controls style="display:none;"></audio>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-gray-800">Share Your Feedback</h2>
+      <textarea id="feedbackText" class="w-full p-3 border border-gray-300 rounded-lg mb-4 h-32 focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Tell us what you think..."></textarea>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeFeedbackModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded-lg font-semibold transition-colors duration-300">
+          Cancel
+        </button>
+        <button onclick="submitFeedback()" class="bg-purple-700 hover:bg-purple-800 text-white p-2 rounded-lg font-semibold transition-colors duration-300">
+          Submit Feedback
+        </button>
       </div>
     </div>
-
-    <footer id="footer">🌱 Powered by SolaceAI</footer>
-    <audio id="voicePlayer" controls style="display:none;"></audio>
   </div>
 
   <script src="script.js"></script>
