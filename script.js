@@ -11,7 +11,7 @@ recognition.onresult = function(event) {
 
 // Function to start microphone input for speech recognition
 function startMic() {
-  const micBtn = document.querySelector('button[onclick="startMic()"]');
+  const micBtn = document.getElementById("micButton");
   micBtn.innerText = "🎤 Listening...";
   micBtn.disabled = true;
 
@@ -20,6 +20,13 @@ function startMic() {
   recognition.onend = () => {
     micBtn.innerText = "🎙️";
     micBtn.disabled = false;
+    // After listening, if input field is still empty, show mic and hide send
+    const userInput = document.getElementById("userInput");
+    const sendButton = document.getElementById("sendButton");
+    if (userInput.value.trim() === "") {
+        micBtn.style.display = 'block';
+        sendButton.style.display = 'none';
+    }
   };
 }
 
@@ -163,13 +170,17 @@ function getTrainingResponse(input) {
   return null;
 }
 
-// Function to send a message (no change needed here for widget)
+// Function to send a message
 async function sendMessage() {
   const input = document.getElementById("userInput").value.trim();
   if (!input) return;
 
   appendMessage("You", input);
-  document.getElementById("userInput").value = "";
+  document.getElementById("userInput").value = ""; // Clear input immediately
+
+  // After sending, ensure mic button is shown and send button is hidden
+  document.getElementById("sendButton").style.display = 'none';
+  document.getElementById("micButton").style.display = 'block';
 
   showTypingIndicator();
 
@@ -181,7 +192,7 @@ async function sendMessage() {
   } else {
     const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
     try {
-      const response = await fetch(`https://ntnl.solace-ai.com/ask`, { // Make sure this is still correct
+      const response = await fetch(`/.netlify/functions/speak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: queryWithPrompt })
@@ -205,7 +216,7 @@ async function sendMessage() {
   speak(cleanTextForTTS(reply));
 }
 
-// Function to append messages to the chat log (no change needed here for widget)
+// Function to append messages to the chat log
 function appendMessage(sender, text) {
   const log = document.getElementById("chatLog");
   const bubble = document.createElement("div");
@@ -216,7 +227,7 @@ function appendMessage(sender, text) {
   log.scrollTop = log.scrollHeight;
 }
 
-// Function to clean text for Text-to-Speech (no change needed here for widget)
+// Function to clean text for Text-to-Speech
 function cleanTextForTTS(raw) {
   let cleaned = raw;
   cleaned = cleaned.replace(/\*\*|__|\*|_|~~|`/g, '');
@@ -226,7 +237,7 @@ function cleanTextForTTS(raw) {
   return cleaned;
 }
 
-// ElevenLabs Text-to-Speech with fallback (via Netlify Function) (no change needed here for widget)
+// ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
   const voiceId = "9PSFVIeBFh3iQoQKBzQh";
 
@@ -260,7 +271,7 @@ async function speak(text) {
   }
 }
 
-// Fallback Text-to-Speech using browser's SpeechSynthesis API (no change needed here for widget)
+// Fallback Text-to-Speech using browser's SpeechSynthesis API
 function fallbackTTS(text) {
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
@@ -269,7 +280,7 @@ function fallbackTTS(text) {
   speechSynthesis.speak(msg);
 }
 
-// --- Feedback Modal Functions (no change needed here for widget logic) ---
+// --- Feedback Modal Functions ---
 function showFeedbackModal() {
   document.getElementById("feedbackModal").classList.remove("hidden");
 }
@@ -292,50 +303,65 @@ function submitFeedback() {
   closeFeedbackModal();
 }
 
-// --- NEW: Widget Toggle Functions ---
+// --- Widget Toggle Functions (from your recent updates) ---
 let isChatOpen = false; // Track the state of the chat widget
 let hasWelcomed = false; // To ensure welcome message only plays once per open
 
 function toggleChat() {
   const chatContainer = document.getElementById("chatContainer");
-  const chatIcon = document.getElementById("chatIcon");
-  const chatIconText = document.getElementById("chatIconText"); // Get the span for the icon text
+  const chatIconSymbol = document.getElementById("chatIconText"); // Bottom right icon
+  const topRightToggle = document.getElementById("topRightToggle"); // Top right icon
 
   if (isChatOpen) {
-    // Close the chat
+    // Close the chat (collapse)
     chatContainer.classList.remove("active");
-    // Change icon back to chat bubble after animation
+    // Change bottom icon back to chat bubble after animation
     setTimeout(() => {
-      chatIconText.textContent = '💬'; // Change to chat icon
+      chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
+    topRightToggle.textContent = '─'; // Change top right to collapse (FinBot style)
   } else {
-    // Open the chat
-    chatContainer.style.display = 'flex'; // Make it display before animation
-    // Force reflow to ensure display change takes effect before transition
-    chatContainer.offsetHeight;
+    // Open the chat (expand)
+    chatContainer.style.display = 'flex';
+    chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconText.textContent = '✖'; // Change icon to 'X'
+    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
+    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
 
-    // Play welcome message only once per session or per first open
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
       appendMessage("StephBot", opening);
       speak(cleanTextForTTS(opening));
-      hasWelcomed = true; // Mark as welcomed
+      hasWelcomed = true;
     }
   }
-  isChatOpen = !isChatOpen; // Toggle the state
+  isChatOpen = !isChatOpen;
 }
 
-// Initial setup: Ensure chat container is hidden and icon is visible
+// --- Page Load & Input Listener ---
 window.onload = function () {
   const chatContainer = document.getElementById("chatContainer");
   chatContainer.style.display = 'none'; // Start hidden
-  // No welcome message on load, it will play when chat opens
-};
 
-// Removed the old closeChat function, as toggleChat now handles it
-// function closeChat() {
-//   document.querySelector(".chat-container").style.display = "none";
-// }
+  const userInput = document.getElementById("userInput");
+  const sendButton = document.getElementById("sendButton");
+  const micButton = document.getElementById("micButton");
+
+  // Initial state: Mic visible, Send hidden
+  sendButton.style.display = 'none';
+  micButton.style.display = 'block'; // Use 'block' for consistent button behavior
+
+  // Event listener for input field to toggle Send/Mic buttons
+  userInput.addEventListener('input', function() {
+    if (this.value.trim() !== "") {
+      // User is typing, show Send, hide Mic
+      sendButton.style.display = 'block';
+      micButton.style.display = 'none';
+    } else {
+      // Input is empty, show Mic, hide Send
+      sendButton.style.display = 'none';
+      micButton.style.display = 'block';
+    }
+  });
+};
