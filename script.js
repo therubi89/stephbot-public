@@ -42,21 +42,19 @@ function removeTypingIndicator() {
 
 // Global variable to manage conversational state for practice scenarios
 let conversationState = {
-  mode: "normal", // "normal", "prompt_practice", "ethics_dilemma", "sermon_prompt_assist"
+  mode: "normal",
   step: 0,
-  data: {} // To store context for multi-turn interactions
+  data: {}
 };
 
 // --- CORE: Internal Knowledge Base for Training Academy Content ---
 function getTrainingResponse(input) {
   const lowerInput = input.toLowerCase();
 
-  // Reset conversation state if user starts a new general query
   if (conversationState.mode !== "normal" && !lowerInput.includes("practice") && !lowerInput.includes("help me start")) {
     conversationState = { mode: "normal", step: 0, data: {} };
   }
 
-  // --- Track 2: Tools Onboarding Responses ---
   if (lowerInput.includes("dashboard") || lowerInput.includes("overview")) {
     return "The Solace AI Dashboard is your central hub for ministry insights. It shows key AI-driven metrics like prompt usage, giving you a quick overview of how AI is being used. You can also find notifications and quick access to all your AI tools here.";
   }
@@ -73,9 +71,6 @@ function getTrainingResponse(input) {
     return "Your feedback is vital for Solace AI's continuous improvement! You can provide feedback using the 'Provide Feedback' button below the chat, through quick survey pop-ups, or by contacting support directly. Your input helps us fix bugs and develop new features for ministry.";
   }
 
-  // --- Cross-Cutting: StephBot AI Content Integration (Tracks 4, 5, 6, 10) ---
-
-  // Track 5: AI Fluency Support
   if (lowerInput.includes("what is ai") || lowerInput.includes("generative ai")) {
     return "Generative AI, like Solace AI, is a tool that can create new content (text, ideas) based on your instructions. Think of it as a very knowledgeable but naive assistant. It learns from patterns in vast amounts of data to generate responses.";
   }
@@ -91,7 +86,6 @@ function getTrainingResponse(input) {
     return "Great! Let's practice 'Description'. Imagine you need an AI to draft a short social media post for your church's upcoming potluck. Your first prompt is 'Write a social media post about a potluck.' How can you make that prompt more *descriptive* to get a better output? Try adding details about the event.";
   }
 
-  // Track 6: Prompt Engineering Support
   if (lowerInput.includes("how to write a good prompt") || lowerInput.includes("prompt engineering")) {
     return "Prompt engineering is the art of crafting effective instructions for AI. A good prompt needs context, a clear persona (e.g., 'Act as a youth pastor'), desired tone, format, and specific constraints. The more detail you give, the better the AI's output will be. Andy Morgan's module will teach you how to master this for ministry tasks!";
   }
@@ -104,7 +98,6 @@ function getTrainingResponse(input) {
     return "Absolutely! Let's start building a sermon prompt. What scripture passage are you preaching on this week?";
   }
 
-  // Track 4: Ethics & Formation Support
   if (lowerInput.includes("ethical concerns") || lowerInput.includes("responsible ai") || lowerInput.includes("is ai biased")) {
     return "Ethical AI in Ministry is crucial. Key concerns include: **Bias & Fairness** (AI reflecting societal biases), **Transparency** (understanding AI's logic), **Accountability** (human responsibility), **Privacy**, **Spiritual Dependence**, and **Misinformation**. Andy Morgan's module will help you navigate these complex areas responsibly.";
   }
@@ -114,7 +107,6 @@ function getTrainingResponse(input) {
     return "Okay, let's consider an ethical dilemma. Imagine AI drafts a prayer for a sensitive congregational situation. What ethical principle from our training should you apply *first* when reviewing it?";
   }
 
-  // Track 10: Analytics & Case Studies Support
   if (lowerInput.includes("how is my church using ai") || lowerInput.includes("ai usage data")) {
     return "I can give you some insights based on your church's simulated usage data. For detailed, real-time metrics, you'll want to check your 'Impact Dashboard' in the Solace platform. What specific data are you curious about?";
   }
@@ -125,7 +117,6 @@ function getTrainingResponse(input) {
     return "You can see your AI's impact in the 'Impact Dashboard' and 'Analytics Panel' within the Solace platform. These show metrics like prompt usage, content engagement, and help you track your 'Ministry Wins'.";
   }
 
-  // --- Conversational State-based Responses (for multi-turn practice) ---
   if (conversationState.mode === "prompt_practice") {
     if (conversationState.step === 1) {
       conversationState.step = 2;
@@ -163,7 +154,7 @@ function getTrainingResponse(input) {
   return null;
 }
 
-// Function to send a message (no change needed here for widget)
+// Function to send a message
 async function sendMessage() {
   const input = document.getElementById("userInput").value.trim();
   if (!input) return;
@@ -181,7 +172,7 @@ async function sendMessage() {
   } else {
     const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
     try {
-      const response = await fetch(`https://ntnl.solace-ai.com/ask`, { // Make sure this is still correct
+      const response = await fetch(`https://ntnl.solace-ai.com/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: queryWithPrompt })
@@ -205,7 +196,7 @@ async function sendMessage() {
   speak(cleanTextForTTS(reply));
 }
 
-// Function to append messages to the chat log (no change needed here for widget)
+// Function to append messages to the chat log
 function appendMessage(sender, text) {
   const log = document.getElementById("chatLog");
   const bubble = document.createElement("div");
@@ -216,7 +207,7 @@ function appendMessage(sender, text) {
   log.scrollTop = log.scrollHeight;
 }
 
-// Function to clean text for Text-to-Speech (no change needed here for widget)
+// Function to clean text for Text-to-Speech
 function cleanTextForTTS(raw) {
   let cleaned = raw;
   cleaned = cleaned.replace(/\*\*|__|\*|_|~~|`/g, '');
@@ -226,7 +217,7 @@ function cleanTextForTTS(raw) {
   return cleaned;
 }
 
-// ElevenLabs Text-to-Speech with fallback (via Netlify Function) (no change needed here for widget)
+// ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
   const voiceId = "9PSFVIeBFh3iQoQKBzQh";
 
@@ -260,7 +251,7 @@ async function speak(text) {
   }
 }
 
-// Fallback Text-to-Speech using browser's SpeechSynthesis API (no change needed here for widget)
+// Fallback Text-to-Speech using browser's SpeechSynthesis API
 function fallbackTTS(text) {
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
@@ -269,7 +260,7 @@ function fallbackTTS(text) {
   speechSynthesis.speak(msg);
 }
 
-// --- Feedback Modal Functions (no change needed here for widget logic) ---
+// --- Feedback Modal Functions ---
 function showFeedbackModal() {
   document.getElementById("feedbackModal").classList.remove("hidden");
 }
@@ -292,50 +283,45 @@ function submitFeedback() {
   closeFeedbackModal();
 }
 
-// --- NEW: Widget Toggle Functions ---
-let isChatOpen = false; // Track the state of the chat widget
-let hasWelcomed = false; // To ensure welcome message only plays once per open
+// --- Widget Toggle Functions ---
+let isChatOpen = false;
+let hasWelcomed = false;
 
 function toggleChat() {
   const chatContainer = document.getElementById("chatContainer");
-  const chatIcon = document.getElementById("chatIcon");
-  const chatIconText = document.getElementById("chatIconText"); // Get the span for the icon text
+  const chatIconSymbol = document.getElementById("chatIconSymbol"); // Bottom right icon
+  const topRightToggle = document.getElementById("topRightToggle"); // Top right icon
 
   if (isChatOpen) {
-    // Close the chat
+    // Close the chat (collapse)
     chatContainer.classList.remove("active");
-    // Change icon back to chat bubble after animation
+    // Change bottom icon back to chat bubble after animation
     setTimeout(() => {
-      chatIconText.textContent = '💬'; // Change to chat icon
+      chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
+    topRightToggle.textContent = '─'; // Change top right to collapse (FinBot style)
   } else {
-    // Open the chat
-    chatContainer.style.display = 'flex'; // Make it display before animation
-    // Force reflow to ensure display change takes effect before transition
-    chatContainer.offsetHeight;
+    // Open the chat (expand)
+    chatContainer.style.display = 'flex';
+    chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconText.textContent = '✖'; // Change icon to 'X'
+    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
+    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
 
-    // Play welcome message only once per session or per first open
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
       appendMessage("StephBot", opening);
       speak(cleanTextForTTS(opening));
-      hasWelcomed = true; // Mark as welcomed
+      hasWelcomed = true;
     }
   }
-  isChatOpen = !isChatOpen; // Toggle the state
+  isChatOpen = !isChatOpen;
 }
 
 // Initial setup: Ensure chat container is hidden and icon is visible
 window.onload = function () {
   const chatContainer = document.getElementById("chatContainer");
   chatContainer.style.display = 'none'; // Start hidden
-  // No welcome message on load, it will play when chat opens
+  // The bottom-right icon is visible by default due to CSS
 };
-
-// Removed the old closeChat function, as toggleChat now handles it
-// function closeChat() {
-//   document.querySelector(".chat-container").style.display = "none";
-// }
