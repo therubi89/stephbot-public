@@ -27,8 +27,8 @@ function startMic() {
 function showTypingIndicator() {
   const log = document.getElementById("chatLog");
   const typingBubble = document.createElement("div");
-  typingBubble.className = "message bot"; // Apply bot message styling
-  typingBubble.id = "typingIndicator"; // Assign ID for easy removal
+  typingBubble.className = "message bot";
+  typingBubble.id = "typingIndicator";
   typingBubble.innerHTML = `<em>StephBot is typing...</em>`;
   log.appendChild(typingBubble);
   log.scrollTop = log.scrollHeight;
@@ -53,8 +53,6 @@ function getTrainingResponse(input) {
 
   // Reset conversation state if user starts a new general query
   if (conversationState.mode !== "normal" && !lowerInput.includes("practice") && !lowerInput.includes("help me start")) {
-    // If not a continuation of a practice, reset
-    // This is a simple heuristic; more complex bots might need explicit "reset" commands
     conversationState = { mode: "normal", step: 0, data: {} };
   }
 
@@ -121,7 +119,6 @@ function getTrainingResponse(input) {
     return "I can give you some insights based on your church's simulated usage data. For detailed, real-time metrics, you'll want to check your 'Impact Dashboard' in the Solace platform. What specific data are you curious about?";
   }
   if (lowerInput.includes("most popular ai-generated content")) {
-    // This would ideally pull from a real database, but for mock-up, use a placeholder
     return "Based on simulated data, your church's most popular AI-generated content recently has been 'Weekly Bulletin Announcements' and 'Social Media Posts for Events'. This suggests AI is helping you most with communications!";
   }
   if (lowerInput.includes("how can i see our ai impact")) {
@@ -135,7 +132,7 @@ function getTrainingResponse(input) {
       conversationState.data.initialPrompt = input;
       return "Good start! Now, what's the *tone* you're aiming for? Is it casual, formal, exciting, or something else?";
     } else if (conversationState.step === 2) {
-      conversationState.mode = "normal"; // Reset state
+      conversationState.mode = "normal";
       return `Excellent! By adding details like '${conversationState.data.initialPrompt}' and a '${input}' tone, your prompt is much more descriptive. This is great 'Description' in action!`;
     }
   }
@@ -151,24 +148,22 @@ function getTrainingResponse(input) {
       return `Got it. What are 2-3 key theological points or themes you want to ensure are included in the sermon outline?`;
     } else if (conversationState.step === 3) {
       conversationState.data.themes = input;
-      conversationState.mode = "normal"; // Reset state
+      conversationState.mode = "normal";
       return `Perfect! With scripture: ${conversationState.data.scripture}, audience: ${conversationState.data.audience}, and themes: ${conversationState.data.themes}, you have a strong prompt for a sermon outline. Now you can use the 'Sermon Outline Generator' template in Solace AI!`;
     }
   }
 
   if (conversationState.mode === "ethics_dilemma") {
     if (conversationState.step === 1) {
-      conversationState.mode = "normal"; // Reset state after first response
+      conversationState.mode = "normal";
       return `That's a very insightful point! When reviewing AI-drafted prayers for sensitive situations, ensuring **Spiritual Authenticity** and **Human Accountability** are paramount. You must discern if it truly reflects your pastoral heart and theological stance. How would you ensure transparency if you used parts of it?`;
     }
   }
 
-  // Default fallback if no specific training response or ongoing conversation state
   return null;
 }
-// --- END CORE: Internal Knowledge Base ---
 
-// Function to send a message
+// Function to send a message (no change needed here for widget)
 async function sendMessage() {
   const input = document.getElementById("userInput").value.trim();
   if (!input) return;
@@ -180,15 +175,13 @@ async function sendMessage() {
 
   let reply = "";
 
-  // Prioritize internal training responses
   const trainingResponse = getTrainingResponse(input);
   if (trainingResponse) {
     reply = trainingResponse;
   } else {
-    // Fallback to NTNL bot for general questions
     const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
     try {
-      const response = await fetch("https://ntnl.solace-ai.com/ask", {
+      const response = await fetch(`https://ntnl.solace-ai.com/ask`, { // Make sure this is still correct
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: queryWithPrompt })
@@ -212,19 +205,18 @@ async function sendMessage() {
   speak(cleanTextForTTS(reply));
 }
 
-// Function to append messages to the chat log
+// Function to append messages to the chat log (no change needed here for widget)
 function appendMessage(sender, text) {
   const log = document.getElementById("chatLog");
   const bubble = document.createElement("div");
 
-  // Apply classes based on sender for styling (defined in CSS)
   bubble.className = sender === "You" ? "message user" : "message bot";
   bubble.innerHTML = `<strong>${sender}:</strong> ${text}`;
   log.appendChild(bubble);
   log.scrollTop = log.scrollHeight;
 }
 
-// Function to clean text for Text-to-Speech (removes markdown, URLs, emojis)
+// Function to clean text for Text-to-Speech (no change needed here for widget)
 function cleanTextForTTS(raw) {
   let cleaned = raw;
   cleaned = cleaned.replace(/\*\*|__|\*|_|~~|`/g, '');
@@ -234,9 +226,9 @@ function cleanTextForTTS(raw) {
   return cleaned;
 }
 
-// ElevenLabs Text-to-Speech with fallback (via Netlify Function)
+// ElevenLabs Text-to-Speech with fallback (via Netlify Function) (no change needed here for widget)
 async function speak(text) {
-  const voiceId = "9PSFVIeBFh3iQoQKBzQh"; // ElevenLabs Voice ID (Kore voice)
+  const voiceId = "9PSFVIeBFh3iQoQKBzQh";
 
   try {
     const response = await fetch(`/.netlify/functions/speak`, {
@@ -268,7 +260,7 @@ async function speak(text) {
   }
 }
 
-// Fallback Text-to-Speech using browser's SpeechSynthesis API
+// Fallback Text-to-Speech using browser's SpeechSynthesis API (no change needed here for widget)
 function fallbackTTS(text) {
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
@@ -277,21 +269,19 @@ function fallbackTTS(text) {
   speechSynthesis.speak(msg);
 }
 
-// --- NEW: Feedback Modal Functions ---
+// --- Feedback Modal Functions (no change needed here for widget logic) ---
 function showFeedbackModal() {
   document.getElementById("feedbackModal").classList.remove("hidden");
 }
 
 function closeFeedbackModal() {
   document.getElementById("feedbackModal").classList.add("hidden");
-  document.getElementById("feedbackText").value = ""; // Clear textarea on close
+  document.getElementById("feedbackText").value = "";
 }
 
 function submitFeedback() {
   const feedbackText = document.getElementById("feedbackText").value.trim();
   if (feedbackText) {
-    // --- IMPORTANT: Integrate Firestore here for persistent storage ---
-    // For now, it logs to console and gives a bot response
     console.log("User Feedback Submitted:", feedbackText);
     appendMessage("StephBot", "Thank you for your feedback! We truly appreciate your input and it helps us improve Solace AI for ministry.");
     speak("Thank you for your feedback! We truly appreciate your input and it helps us improve Solace AI for ministry.");
@@ -301,17 +291,51 @@ function submitFeedback() {
   }
   closeFeedbackModal();
 }
-// --- END NEW: Feedback Modal Functions ---
 
+// --- NEW: Widget Toggle Functions ---
+let isChatOpen = false; // Track the state of the chat widget
+let hasWelcomed = false; // To ensure welcome message only plays once per open
 
-// Initial message from StephBot when the page loads
+function toggleChat() {
+  const chatContainer = document.getElementById("chatContainer");
+  const chatIcon = document.getElementById("chatIcon");
+  const chatIconText = document.getElementById("chatIconText"); // Get the span for the icon text
+
+  if (isChatOpen) {
+    // Close the chat
+    chatContainer.classList.remove("active");
+    // Change icon back to chat bubble after animation
+    setTimeout(() => {
+      chatIconText.textContent = '💬'; // Change to chat icon
+      chatContainer.style.display = 'none'; // Fully hide after animation
+    }, 300); // Match CSS transition duration
+  } else {
+    // Open the chat
+    chatContainer.style.display = 'flex'; // Make it display before animation
+    // Force reflow to ensure display change takes effect before transition
+    chatContainer.offsetHeight;
+    chatContainer.classList.add("active");
+    chatIconText.textContent = '✖'; // Change icon to 'X'
+
+    // Play welcome message only once per session or per first open
+    if (!hasWelcomed) {
+      const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
+      appendMessage("StephBot", opening);
+      speak(cleanTextForTTS(opening));
+      hasWelcomed = true; // Mark as welcomed
+    }
+  }
+  isChatOpen = !isChatOpen; // Toggle the state
+}
+
+// Initial setup: Ensure chat container is hidden and icon is visible
 window.onload = function () {
-  const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
-  appendMessage("StephBot", opening);
-  speak(cleanTextForTTS(opening));
+  const chatContainer = document.getElementById("chatContainer");
+  chatContainer.style.display = 'none'; // Start hidden
+  // No welcome message on load, it will play when chat opens
 };
 
-// Function to close the chat container (if needed, currently hides it)
-function closeChat() {
-  document.querySelector(".chat-container").style.display = "none";
-}
+// Removed the old closeChat function, as toggleChat now handles it
+// function closeChat() {
+//   document.querySelector(".chat-container").style.display = "none";
+// }
