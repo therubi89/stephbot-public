@@ -10,9 +10,10 @@
     /* Custom CSS overrides or additions not easily done with Tailwind */
     body {
       font-family: 'Inter', sans-serif;
+      /* Ensure full viewport for the fixed positioning to work well */
       min-height: 100vh;
       margin: 0;
-      overflow: hidden;
+      overflow: hidden; /* Prevent scrollbars from fixed elements */
     }
 
     /* Styles for chat bubbles - Tailwind classes are applied in JS, but base here */
@@ -24,13 +25,13 @@
       line-height: 1.4em;
     }
     .user {
-      background: #6a11cb;
+      background: #6a11cb; /* Original user color */
       color: #fff;
       align-self: flex-end;
       border-bottom-right-radius: 0;
     }
     .bot {
-      background: #eee;
+      background: #eee; /* Original bot color */
       color: #333;
       align-self: flex-start;
       border-bottom-left-radius: 0;
@@ -73,31 +74,31 @@
       display: none !important;
     }
 
-    /* Chat widget positioning and animation */
+    /* NEW: Chat widget positioning and animation */
     .chat-widget-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      display: flex;
+      position: fixed; /* Fixed position relative to viewport */
+      bottom: 20px; /* Distance from bottom */
+      right: 20px; /* Distance from right */
+      z-index: 1000; /* Ensure it's on top */
+      display: flex; /* To contain both icon and chat */
       flex-direction: column;
-      align-items: flex-end;
+      align-items: flex-end; /* Align contents to the right */
     }
 
-    /* Chat Icon styling (bottom right) */
+    /* NEW: Chat Icon styling */
     #chatIcon {
-      width: 60px;
+      width: 60px; /* Size of the icon */
       height: 60px;
-      background: #6a11cb;
-      border-radius: 50%;
+      background: #6a11cb; /* Background color for the icon */
+      border-radius: 50%; /* Make it circular */
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.3s ease-in-out;
-      color: white;
-      font-size: 2rem;
+      transition: transform 0.3s ease-in-out; /* Smooth hover effect */
+      color: white; /* For the plus/chat icon */
+      font-size: 2rem; /* Size of the plus/chat icon */
     }
 
     #chatIcon:hover {
@@ -106,30 +107,33 @@
 
     /* Chat Container Animation */
     .chat-container {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      opacity: 0;
-      transform: translateY(100%);
-      pointer-events: none;
-      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-      max-width: 400px;
-      width: 90vw;
-      height: 600px;
-      transform-origin: bottom right;
+      /* Re-apply some original styles and add new ones for animation */
+      position: absolute; /* Positioned relative to .chat-widget-container */
+      bottom: 0; /* Align with the bottom of its parent */
+      right: 0; /* Align with the right of its parent */
+      opacity: 0; /* Start invisible */
+      transform: translateY(100%); /* Start completely below its position */
+      pointer-events: none; /* Disable interactions when hidden */
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition */
+      /* Max-width and height are already in Tailwind classes, but absolute positioning removes it from normal flow */
+      max-width: 400px; /* Ensure specific max-width for the pop-up */
+      width: 90vw; /* Responsive width */
+      height: 600px; /* Fixed height for the chat window */
+      transform-origin: bottom right; /* For scaling if you add that */
     }
 
     .chat-container.active {
-      opacity: 1;
-      transform: translateY(-70px); /* Adjust based on icon size */
-      pointer-events: auto;
+      opacity: 1; /* Fade in */
+      transform: translateY(-70px); /* Slide up to sit above the icon (adjust if icon size changes) */
+      pointer-events: auto; /* Enable interactions when visible */
     }
 
+    /* Ensure body doesn't cause scrollbars if chat pops up near edge */
     body {
       overflow-x: hidden;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 640px) { /* Adjust for smaller screens */
       .chat-widget-container {
         bottom: 10px;
         right: 10px;
@@ -139,7 +143,7 @@
         height: 50px;
       }
       .chat-container.active {
-        transform: translateY(-60px);
+        transform: translateY(-60px); /* Adjust for smaller icon */
       }
     }
   </style>
@@ -148,13 +152,13 @@
 
   <div class="chat-widget-container">
     <div id="chatIcon" class="chat-icon" onclick="toggleChat()">
-      <span id="chatIconSymbol">💬</span> </div>
+      <span id="chatIconText">💬</span> </div>
 
     <div id="chatContainer" class="chat-container bg-white rounded-xl shadow-2xl flex flex-col h-[600px] overflow-hidden">
       <div class="chat-header bg-gradient-to-r from-purple-700 to-blue-500 text-white flex justify-between items-center p-4 rounded-t-xl">
         <span class="chat-title text-xl font-bold">StephBot</span>
-        <button id="topRightToggle" onclick="toggleChat()" class="text-white text-2xl font-bold hover:text-gray-200 transition-colors duration-300 focus:outline-none">
-          ─
+        <button onclick="toggleChat()" class="text-white text-2xl font-bold hover:text-gray-200 transition-colors duration-300 focus:outline-none">
+          &times;
         </button>
       </div>
 
