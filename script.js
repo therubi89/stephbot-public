@@ -20,7 +20,6 @@ function startMic() {
   recognition.onend = () => {
     micBtn.innerText = "🎙️";
     micBtn.disabled = false;
-    // After listening, if input field is still empty, show mic and hide send
     const userInput = document.getElementById("userInput");
     const sendButton = document.getElementById("sendButton");
     if (userInput.value.trim() === "") {
@@ -49,21 +48,19 @@ function removeTypingIndicator() {
 
 // Global variable to manage conversational state for practice scenarios
 let conversationState = {
-  mode: "normal", // "normal", "prompt_practice", "ethics_dilemma", "sermon_prompt_assist"
+  mode: "normal",
   step: 0,
-  data: {} // To store context for multi-turn interactions
+  data: {}
 };
 
 // --- CORE: Internal Knowledge Base for Training Academy Content ---
 function getTrainingResponse(input) {
   const lowerInput = input.toLowerCase();
 
-  // Reset conversation state if user starts a new general query
   if (conversationState.mode !== "normal" && !lowerInput.includes("practice") && !lowerInput.includes("help me start")) {
     conversationState = { mode: "normal", step: 0, data: {} };
   }
 
-  // --- Track 2: Tools Onboarding Responses ---
   if (lowerInput.includes("dashboard") || lowerInput.includes("overview")) {
     return "The Solace AI Dashboard is your central hub for ministry insights. It shows key AI-driven metrics like prompt usage, giving you a quick overview of how AI is being used. You can also find notifications and quick access to all your AI tools here.";
   }
@@ -80,9 +77,6 @@ function getTrainingResponse(input) {
     return "Your feedback is vital for Solace AI's continuous improvement! You can provide feedback using the 'Provide Feedback' button below the chat, through quick survey pop-ups, or by contacting support directly. Your input helps us fix bugs and develop new features for ministry.";
   }
 
-  // --- Cross-Cutting: StephBot AI Content Integration (Tracks 4, 5, 6, 10) ---
-
-  // Track 5: AI Fluency Support
   if (lowerInput.includes("what is ai") || lowerInput.includes("generative ai")) {
     return "Generative AI, like Solace AI, is a tool that can create new content (text, ideas) based on your instructions. Think of it as a very knowledgeable but naive assistant. It learns from patterns in vast amounts of data to generate responses.";
   }
@@ -98,7 +92,6 @@ function getTrainingResponse(input) {
     return "Great! Let's practice 'Description'. Imagine you need an AI to draft a short social media post for your church's upcoming potluck. Your first prompt is 'Write a social media post about a potluck.' How can you make that prompt more *descriptive* to get a better output? Try adding details about the event.";
   }
 
-  // Track 6: Prompt Engineering Support
   if (lowerInput.includes("how to write a good prompt") || lowerInput.includes("prompt engineering")) {
     return "Prompt engineering is the art of crafting effective instructions for AI. A good prompt needs context, a clear persona (e.g., 'Act as a youth pastor'), desired tone, format, and specific constraints. The more detail you give, the better the AI's output will be. Andy Morgan's module will teach you how to master this for ministry tasks!";
   }
@@ -111,7 +104,6 @@ function getTrainingResponse(input) {
     return "Absolutely! Let's start building a sermon prompt. What scripture passage are you preaching on this week?";
   }
 
-  // Track 4: Ethics & Formation Support
   if (lowerInput.includes("ethical concerns") || lowerInput.includes("responsible ai") || lowerInput.includes("is ai biased")) {
     return "Ethical AI in Ministry is crucial. Key concerns include: **Bias & Fairness** (AI reflecting societal biases), **Transparency** (understanding AI's logic), **Accountability** (human responsibility), **Privacy**, **Spiritual Dependence**, and **Misinformation**. Andy Morgan's module will help you navigate these complex areas responsibly.";
   }
@@ -121,7 +113,6 @@ function getTrainingResponse(input) {
     return "Okay, let's consider an ethical dilemma. Imagine AI drafts a prayer for a sensitive congregational situation. What ethical principle from our training should you apply *first* when reviewing it?";
   }
 
-  // Track 10: Analytics & Case Studies Support
   if (lowerInput.includes("how is my church using ai") || lowerInput.includes("ai usage data")) {
     return "I can give you some insights based on your church's simulated usage data. For detailed, real-time metrics, you'll want to check your 'Impact Dashboard' in the Solace platform. What specific data are you curious about?";
   }
@@ -132,7 +123,6 @@ function getTrainingResponse(input) {
     return "You can see your AI's impact in the 'Impact Dashboard' and 'Analytics Panel' within the Solace platform. These show metrics like prompt usage, content engagement, and help you track your 'Ministry Wins'.";
   }
 
-  // --- Conversational State-based Responses (for multi-turn practice) ---
   if (conversationState.mode === "prompt_practice") {
     if (conversationState.step === 1) {
       conversationState.step = 2;
@@ -192,7 +182,7 @@ async function sendMessage() {
   } else {
     const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
     try {
-      const response = await fetch(`https://ntnl.solace-ai.com/ask`, { // THIS IS THE NTNL API CALL
+      const response = await fetch(`https://ntnl.solace-ai.com/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: queryWithPrompt })
@@ -239,7 +229,7 @@ function cleanTextForTTS(raw) {
 
 // ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
-  const voiceId = "BZgkqPqms7Kj9ulSkVzn"; // RESTORED VOICE ID 
+  const voiceId = "BZgkqPqms7Kj9ulSkVzn";
 
   try {
     const response = await fetch(`/.netlify/functions/speak`, {
@@ -304,8 +294,8 @@ function submitFeedback() {
 }
 
 // --- Widget Toggle Functions ---
-let isChatOpen = false; // Track the state of the chat widget
-let hasWelcomed = false; // To ensure welcome message only plays once per open
+let isChatOpen = false;
+let hasWelcomed = false;
 
 function toggleChat() {
   const chatContainer = document.getElementById("chatContainer");
@@ -320,14 +310,14 @@ function toggleChat() {
       chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
-    topRightToggle.textContent = '─'; // Change top right to collapse (FinBot style)
+    //topRightToggle.textContent = '─'; // Set top right to collapse (FinBot style)
   } else {
     // Open the chat (expand)
     chatContainer.style.display = 'flex';
     chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
-    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
+    chatIconSymbol.textContent = '✖'; // Change bottom icon to '⌄'
+    //topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
 
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
@@ -338,6 +328,51 @@ function toggleChat() {
   }
   isChatOpen = !isChatOpen;
 }
+
+// --- NEW: Menu Toggle Functions and Download Transcript ---
+
+function toggleMenu() {
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    // Toggle 'active' class to show/hide the menu
+    dropdownMenu.classList.toggle('active');
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.addEventListener('click', function(event) {
+    const menuButton = document.getElementById('menuButton');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    if (dropdownMenu.classList.contains('active') && !menuButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+        dropdownMenu.classList.remove('active');
+    }
+});
+
+
+function downloadTranscript() {
+    const chatLogDiv = document.getElementById('chatLog');
+    const messages = chatLogDiv.querySelectorAll('.message');
+    let transcriptText = "StephBot Chat Transcript\n\n";
+
+    messages.forEach(messageDiv => {
+        const sender = messageDiv.querySelector('strong').textContent.replace(':', '').trim();
+        const text = messageDiv.textContent.replace(sender + ':', '').trim();
+        transcriptText += `${sender}: ${text}\n`;
+    });
+
+    const blob = new Blob([transcriptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'stephbot_chat_transcript.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // Clean up the object URL
+
+    // Close the menu after download
+    document.getElementById('dropdownMenu').classList.remove('active');
+}
+
 
 // --- Page Load & Input Listener ---
 window.onload = function () {
@@ -350,7 +385,7 @@ window.onload = function () {
 
   // Initial state: Mic visible, Send hidden
   sendButton.style.display = 'none';
-  micButton.style.display = 'block'; // Use 'block' for consistent button behavior
+  micButton.style.display = 'block';
 
   // Event listener for input field to toggle Send/Mic buttons
   userInput.addEventListener('input', function() {
