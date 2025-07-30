@@ -320,14 +320,14 @@ function toggleChat() {
       chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
-    topRightToggle.textContent = '─'; // Change top right to collapse (FinBot style)
+    
   } else {
     // Open the chat (expand)
     chatContainer.style.display = 'flex';
     chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
-    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
+    chatIconSymbol.textContent = '✖'; // Change bottom icon to '⌄'
+    //topRightToggle.textContent = '-'; 
 
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
