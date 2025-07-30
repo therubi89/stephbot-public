@@ -239,7 +239,7 @@ function cleanTextForTTS(raw) {
 
 // ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
-  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; // RESTORED VOICE ID
+  const voiceId = "BZgkqPqms7Kj9ulSkVzn"; // RESTORED VOICE ID 
 
   try {
     const response = await fetch(`/.netlify/functions/speak`, {
