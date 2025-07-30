@@ -192,7 +192,7 @@ async function sendMessage() {
   } else {
     const queryWithPrompt = `In no more than 3 sentences, answer the following: ${input}`;
     try {
-      const response = await fetch(`/.netlify/functions/speak`, {
+      const response = await fetch(`https://ntnl.solace-ai.com/ask`, { // THIS IS THE NTNL API CALL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: queryWithPrompt })
@@ -239,7 +239,7 @@ function cleanTextForTTS(raw) {
 
 // ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
-  const voiceId = "BZgkqPqms7Kj9ulSkVzn";
+  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; // RESTORED VOICE ID
 
   try {
     const response = await fetch(`/.netlify/functions/speak`, {
@@ -303,7 +303,7 @@ function submitFeedback() {
   closeFeedbackModal();
 }
 
-// --- Widget Toggle Functions (from your recent updates) ---
+// --- Widget Toggle Functions ---
 let isChatOpen = false; // Track the state of the chat widget
 let hasWelcomed = false; // To ensure welcome message only plays once per open
 
@@ -320,14 +320,14 @@ function toggleChat() {
       chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
-    
+    topRightToggle.textContent = '─'; // Change top right to collapse (FinBot style)
   } else {
     // Open the chat (expand)
     chatContainer.style.display = 'flex';
     chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconSymbol.textContent = '✖'; // Change bottom icon to '⌄'
-    //topRightToggle.textContent = '-'; 
+    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
+    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
 
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
