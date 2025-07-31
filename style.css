@@ -33,6 +33,26 @@
   border-bottom-left-radius: 0; /* Specific corner radius for bot bubble */
 }
 
+.footer-links {
+    display: flex;
+    justify-content: center; /* Center the links within the footer */
+    align-items: center;
+    flex-wrap: wrap; /* Allow links to wrap to the next line on small screens */
+    gap: 8px; /* Space between items */
+}
+
+.footer-links a {
+    color: #6a11cb; /* Link color */
+    text-decoration: none; /* No underline by default */
+    font-weight: 500; /* Slightly bolder */
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: #4b0bb3; /* Darker on hover */
+    text-decoration: underline; /* Underline on hover */
+}
+
 /* Typing indicator specific styling */
 #typingIndicator {
   background: #e0e0e0; /* Lighter grey for typing indicator */

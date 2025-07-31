@@ -51,9 +51,6 @@ function removeTypingIndicator() {
 const chatHistory = [];
 const MAX_HISTORY_LENGTH = 5; // Keep only the last 5 turns (user + bot pairs)
 
-// --- REMOVED: Internal Knowledge Base function getTrainingResponse ---
-// This function and its logic are now removed as NTNL backend will handle all responses.
-
 // Function to send a message
 async function sendMessage() {
   const input = document.getElementById("userInput").value.trim();
@@ -77,36 +74,22 @@ async function sendMessage() {
 
   let reply = "";
 
-  // Prepare messages array for NTNL, including history
-  // NTNL API might expect a specific format, e.g., an array of {role, content} or a single string with history appended.
-  // For now, we'll send it as a 'messages' array in the body, which is common for LLM APIs.
-  const messagesToSend = chatHistory.map(msg => ({
-      role: msg.role,
-      content: msg.content
-  }));
+  // --- MODIFIED: Prepare query for NTNL, concatenating history into the 'query' string ---
+  const historicalContext = chatHistory
+      .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n');
 
-  // Add the current user query to the messages array, but also append the instruction
-  const finalQueryForNTNL = `In no more than 3 sentences, answer the following: ${input}`;
-  // Depending on NTNL API, you might send just the 'finalQueryForNTNL' string in 'query' field
-  // or a 'messages' array with history. Let's assume 'query' field will process context.
-  // If NTNL needs full history, you'd send: body: JSON.stringify({ messages: messagesToSend })
-  // For now, we'll keep the 'query' field as that's what was used, but be aware this might
-  // need adjustment based on how NTNL handles conversational context on their end.
-  // If NTNL takes 'query' as a simple string, you'd combine history into the string:
-  // const historicalContext = chatHistory.map(m => `${m.role}: ${m.content}`).join('\n');
-  // const queryWithContext = `${historicalContext}\nUser: ${input}\nIn no more than 3 sentences...`;
-  // We'll stick to the existing 'query' field for simplicity but note the potential for change.
+  // Combine historical context with the current query and the brevity instruction
+  // The LLM will parse this combined string to understand context.
+  const finalQueryForNTNL = `${historicalContext}\nUser: ${input}\n\nIn no more than 3 sentences, please answer the user's last question based on the conversation history.`;
+  // --- END MODIFIED ---
 
   try {
     const response = await fetch(`https://ntnl.solace-ai.com/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // Send the entire chat history for conversational context
-      // Assuming NTNL's /ask endpoint can parse a 'messages' array for context
-      // If it only takes a 'query' string, you'd format messagesToSend into a single string.
       body: JSON.stringify({
-          query: finalQueryForNTNL, // The direct user query with brevity instruction
-          history: messagesToSend // Sending the full history for context processing by NTNL
+          query: finalQueryForNTNL // Send the combined query string
       })
     });
 
@@ -153,7 +136,7 @@ function cleanTextForTTS(raw) {
 
 // ElevenLabs Text-to-Speech with fallback (via Netlify Function)
 async function speak(text) {
-  const voiceId = "9PSFVIeBFh3iQoQKBzQF"; // RESTORED VOICE ID (from earlier correct version)
+  const voiceId = "9PSFVIeBFh3iQoQKBzQF";
 
   try {
     const response = await fetch(`/.netlify/functions/speak`, {
@@ -234,14 +217,14 @@ function toggleChat() {
       chatIconSymbol.textContent = '💬'; // Back to chat icon
       chatContainer.style.display = 'none'; // Fully hide after animation
     }, 300); // Match CSS transition duration
-    topRightToggle.textContent = '─'; // Set top right to collapse (FinBot style)
+    //topRightToggle.textContent = '─'; // Set top right to collapse (FinBot style)
   } else {
     // Open the chat (expand)
     chatContainer.style.display = 'flex';
     chatContainer.offsetHeight; // Force reflow
     chatContainer.classList.add("active");
-    chatIconSymbol.textContent = '⌄'; // Change bottom icon to '⌄'
-    topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
+    chatIconSymbol.textContent = '✖'; // Change bottom icon to '⌄'
+    //topRightToggle.textContent = '⤢'; // Change top right to expand (FinBot style)
 
     if (!hasWelcomed) {
       const opening = "Hi! I’m StephBot, your AI assistant for the Solace Training Academy. How can I help you today?";
@@ -255,6 +238,7 @@ function toggleChat() {
 }
 
 // --- Menu Toggle Functions and Download Transcript ---
+
 function toggleMenu() {
     const dropdownMenu = document.getElementById('dropdownMenu');
     dropdownMenu.classList.toggle('active');
@@ -268,6 +252,7 @@ window.addEventListener('click', function(event) {
         dropdownMenu.classList.remove('active');
     }
 });
+
 
 function downloadTranscript() {
     const chatLogDiv = document.getElementById('chatLog');
@@ -294,6 +279,7 @@ function downloadTranscript() {
     // Close the menu after download
     document.getElementById('dropdownMenu').classList.remove('active');
 }
+
 
 // --- Page Load & Input Listener ---
 window.onload = function () {

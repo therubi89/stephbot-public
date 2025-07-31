@@ -143,49 +143,49 @@
       }
     }
 
-    /* NEW: Meatballs Menu Styling */
+    /* Meatballs Menu Styling */
     .menu-container {
-      position: relative; /* For dropdown positioning */
-      display: inline-block; /* To allow side-by-side with toggle button */
-      margin-left: 8px; /* Spacing between toggle and menu */
+      position: relative;
+      display: inline-block;
+      margin-left: 8px;
     }
 
     .menu-button {
       background: none;
       border: none;
       color: white;
-      font-size: 1.5rem; /* Adjust size as needed for '...' */
+      font-size: 1.5rem;
       cursor: pointer;
       padding: 0;
       margin: 0;
-      line-height: 1; /* Align text vertically */
-      height: 30px; /* Make it clickable area more generous */
+      line-height: 1;
+      height: 30px;
       width: 30px;
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 50%; /* Make it circular like a button */
+      border-radius: 50%;
       transition: background-color 0.3s ease;
     }
 
     .menu-button:hover {
-      background-color: rgba(255, 255, 255, 0.2); /* Light hover effect */
+      background-color: rgba(255, 255, 255, 0.2);
     }
 
     .dropdown-menu {
       position: absolute;
-      top: 100%; /* Position below the button */
-      right: 0; /* Align to the right of the button */
+      top: 100%;
+      right: 0;
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       min-width: 180px;
       overflow: hidden;
-      z-index: 20; /* Above chat content */
-      margin-top: 8px; /* Space between button and dropdown */
+      z-index: 20;
+      margin-top: 8px;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-10px); /* Slight slide up animation */
+      transform: translateY(-10px);
       transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s ease-out;
     }
 
@@ -196,7 +196,7 @@
     }
 
     .dropdown-menu button {
-      display: block; /* Make each item take full width */
+      display: block;
       width: 100%;
       padding: 12px 16px;
       text-align: left;
@@ -206,12 +206,33 @@
       border: none;
       cursor: pointer;
       transition: background-color 0.2s ease;
-      border-radius: 0; /* Remove button border radius */
+      border-radius: 0;
     }
 
     .dropdown-menu button:hover {
       background-color: #f0f0f0;
       color: #6a11cb;
+    }
+
+    /* NEW: Footer Links Styling */
+    .footer-links {
+        display: flex;
+        justify-content: center; /* Center the links within the footer */
+        align-items: center;
+        flex-wrap: wrap; /* Allow links to wrap to the next line on small screens */
+        gap: 8px; /* Space between items */
+    }
+
+    .footer-links a {
+        color: #6a11cb; /* Link color */
+        text-decoration: none; /* No underline by default */
+        font-weight: 500; /* Slightly bolder */
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+
+    .footer-links a:hover {
+        color: #4b0bb3; /* Darker on hover */
+        text-decoration: underline; /* Underline on hover */
     }
   </style>
 </head>
@@ -225,15 +246,17 @@
     <div id="chatContainer" class="chat-container bg-white rounded-xl shadow-2xl flex flex-col h-[600px] overflow-hidden">
       <div class="chat-header bg-gradient-to-r from-purple-700 to-blue-500 text-white flex justify-between items-center p-4 rounded-t-xl">
         <span class="chat-title text-xl font-bold">StephBot</span>
-        <div class="flex items-center"> <button id="topRightToggle" onclick="toggleChat()" class="text-white text-2xl font-bold hover:text-gray-200 transition-colors duration-300 focus:outline-none mr-2">
+        <div class="flex items-center">
+          <button id="topRightToggle" onclick="toggleChat()" class="text-white text-2xl font-bold hover:text-gray-200 transition-colors duration-300 focus:outline-none mr-2">
             &times;
           </button>
           <div class="menu-container">
             <button id="menuButton" class="menu-button" onclick="toggleMenu()">
-              &#8942; </button>
+              &#8942;
+            </button>
             <div id="dropdownMenu" class="dropdown-menu">
               <button onclick="downloadTranscript()">Download Chat</button>
-              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -256,8 +279,13 @@
         </button>
       </div>
 
-      <footer id="footer" class="text-center text-gray-500 text-xs p-2 bg-white border-t border-gray-100">
-        🌱 Powered by SolaceAI
+      <footer id="footer" class="text-center text-gray-500 text-xs p-2 bg-white border-t border-gray-100 flex flex-col md:flex-row justify-center items-center">
+        <div class="flex items-center space-x-1 mb-1 md:mb-0 md:mr-2">
+            <span class="text-base">🌱</span>
+            <span>Powered by SolaceAI</span>
+        </div>
+        <div class="footer-links">
+            <a href="mailto:support@wearesolace.com?subject=StephBot Feedback" class="hover:underline">Feedback and Support</a>
       </footer>
       <audio id="voicePlayer" controls style="display:none;"></audio>
     </div>
