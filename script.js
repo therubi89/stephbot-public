@@ -47,7 +47,6 @@ function removeTypingIndicator() {
 }
 
 // Global variable to store chat history for conversational context
-// We'll store an array of { role: 'user'/'assistant', content: 'text' }
 const chatHistory = [];
 const MAX_HISTORY_LENGTH = 5; // Keep only the last 5 turns (user + bot pairs)
 
