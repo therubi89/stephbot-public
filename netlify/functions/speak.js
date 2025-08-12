@@ -21,32 +21,29 @@ exports.handler = async function(event, context) {
 
   return new Promise((resolve, reject) => {
     try {
-      const ws = new WebSocket(`wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-with-timestamps?model_id=${modelId}`);
+      // --- CORRECTED: Pass API key as a query parameter in the URL ---
+      const ws = new WebSocket(`wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-with-timestamps?model_id=${modelId}&xi_api_key=${ELEVENLABS_API_KEY}`);
       let audioChunks = [];
 
       ws.onopen = () => {
         console.log('WebSocket connection opened.');
-        // Send the BOS (Beginning of Stream) message
+        // Send the BOS (Beginning of Stream) message. The API key is already in the URL.
         ws.send(JSON.stringify({
-          text: " ", // A space to initiate the stream
+          text: " ",
           voice_settings: voiceSettings,
-          xi_api_key: ELEVENLABS_API_KEY,
         }));
         
-        // Send the text content
         const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
         for (const sentence of sentences) {
           ws.send(JSON.stringify({ text: sentence }));
         }
 
-        // Send the EOS (End of Stream) message
         ws.send(JSON.stringify({ text: "" }));
       };
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.audio) {
-          // Collect audio chunks
           audioChunks.push(data.audio);
         }
       };
@@ -59,7 +56,6 @@ exports.handler = async function(event, context) {
       ws.onclose = () => {
         console.log('WebSocket connection closed.');
         if (audioChunks.length > 0) {
-          // Concatenate all Base64 chunks and send back as a single response
           const fullAudioBase64 = audioChunks.join('');
           resolve({
             statusCode: 200,
