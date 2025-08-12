@@ -1,100 +1,82 @@
 // netlify/functions/speak.js
 
-let fetch;
-(async () => {
-  fetch = (await import('node-fetch')).default;
-})();
+const { WebSocket } = require('ws');
 
 exports.handler = async function(event, context) {
-  // Wait for fetch to be loaded before proceeding
-  while (!fetch) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-  }
-
-  console.log("Function invoked.");
-
   if (event.httpMethod !== "POST") {
-    console.warn("Method Not Allowed:", event.httpMethod);
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
   if (!ELEVENLABS_API_KEY) {
-    console.error("ElevenLabs API Key is NOT set in Netlify environment variables. Check Site Settings -> Build & deploy -> Environment variables.");
+    console.error("ElevenLabs API Key is not set in Netlify environment variables.");
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Server configuration error: API key missing." }),
     };
   }
 
-  try {
-    const { text, voiceId, model_id, voice_settings } = JSON.parse(event.body);
-    console.log("Received payload:", { text, voiceId });
+  const { text, voiceId, modelId, voiceSettings } = JSON.parse(event.body);
 
-    if (!voiceId) {
-        console.error("Missing voiceId in request body.");
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: "Missing voiceId in request." }),
-        };
-    }
+  return new Promise((resolve, reject) => {
+    try {
+      const ws = new WebSocket(`wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-with-timestamps?model_id=${modelId}`);
+      let audioChunks = [];
 
-    console.log(`Calling ElevenLabs for voiceId: ${voiceId}`);
-    const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: "POST",
-      headers: {
-        "Accept": "audio/mpeg",
-        "xi-api-key": ELEVENLABS_API_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        text: text,
-        model_id: model_id || "eleven_monolingual_v1",
-        voice_settings: voice_settings || { stability: 0.3, similarity_boost: 0.75 }
-      })
-    });
-    console.log(`ElevenLabs response status: ${elevenLabsResponse.status}`);
+      ws.onopen = () => {
+        console.log('WebSocket connection opened.');
+        // Send the BOS (Beginning of Stream) message
+        ws.send(JSON.stringify({
+          text: " ", // A space to initiate the stream
+          voice_settings: voiceSettings,
+          xi_api_key: ELEVENLABS_API_KEY,
+        }));
+        
+        // Send the text content
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        for (const sentence of sentences) {
+          ws.send(JSON.stringify({ text: sentence }));
+        }
 
-    if (!elevenLabsResponse.ok) {
-      const errorText = await elevenLabsResponse.text();
-      console.error(`ElevenLabs API returned an error: Status ${elevenLabsResponse.status}, Body: ${errorText}`);
-      return {
-        statusCode: elevenLabsResponse.status,
-        body: JSON.stringify({ error: `ElevenLabs API error: ${errorText}` })
+        // Send the EOS (End of Stream) message
+        ws.send(JSON.stringify({ text: "" }));
       };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.audio) {
+          // Collect audio chunks
+          audioChunks.push(data.audio);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        reject({ statusCode: 500, body: "ElevenLabs WebSocket error." });
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket connection closed.');
+        if (audioChunks.length > 0) {
+          // Concatenate all Base64 chunks and send back as a single response
+          const fullAudioBase64 = audioChunks.join('');
+          resolve({
+            statusCode: 200,
+            headers: {
+              "Content-Type": "audio/mpeg",
+              "Content-Length": Buffer.from(fullAudioBase64, 'base64').length,
+            },
+            body: fullAudioBase64,
+            isBase64Encoded: true,
+          });
+        } else {
+          resolve({ statusCode: 500, body: "No audio data received." });
+        }
+      };
+    } catch (error) {
+      console.error("Function execution error:", error);
+      reject({ statusCode: 500, body: "Internal server error." });
     }
-
-    console.log("ElevenLabs call successful, processing audio.");
-    // --- CHANGE START ---
-    const audioArrayBuffer = await elevenLabsResponse.arrayBuffer(); // Use arrayBuffer()
-    const audioBuffer = Buffer.from(audioArrayBuffer); // Convert ArrayBuffer to Node.js Buffer
-    // --- CHANGE END ---
-
-    if (audioBuffer.length === 0) {
-        console.error("ElevenLabs returned an empty audio blob.");
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "ElevenLabs returned empty audio data." })
-        };
-    }
-    console.log(`Audio blob size: ${audioBuffer.length} bytes`);
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "audio/mpeg",
-        "Content-Length": audioBuffer.length,
-      },
-      body: audioBuffer.toString('base64'),
-      isBase64Encoded: true,
-    };
-
-  } catch (error) {
-    console.error("UNHANDLED FUNCTION ERROR:", error.message, error.stack);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Internal server error." }),
-    };
-  }
+  });
 };

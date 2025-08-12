@@ -59,7 +59,7 @@ async function sendMessage() {
   appendMessage("You", input);
   chatHistory.push({ role: "user", content: input });
   // Trim history to maintain context window size
-  if (chatHistory.length > MAX_HISTORY_LENGTH * 2) { // *2 because each turn is user+bot
+  if (chatHistory.length > MAX_HISTORY_LENGTH * 2) {
       chatHistory.splice(0, chatHistory.length - MAX_HISTORY_LENGTH * 2);
   }
 
@@ -73,22 +73,18 @@ async function sendMessage() {
 
   let reply = "";
 
-  // --- MODIFIED: Prepare query for NTNL, concatenating history into the 'query' string ---
   const historicalContext = chatHistory
       .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
       .join('\n');
 
-  // Combine historical context with the current query and the brevity instruction
-  // The LLM will parse this combined string to understand context.
   const finalQueryForNTNL = `${historicalContext}\nUser: ${input}\n\nIn no more than 3 sentences, please answer the user's last question based on the conversation history.`;
-  // --- END MODIFIED ---
 
   try {
     const response = await fetch(`https://ntnl.solace-ai.com/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-          query: finalQueryForNTNL // Send the combined query string
+          query: finalQueryForNTNL
       })
     });
 
@@ -109,6 +105,7 @@ async function sendMessage() {
   appendMessage("StephBot", reply);
   chatHistory.push({ role: "assistant", content: reply });
 
+  // --- REVERTED: Use a fetch call to the Netlify Function ---
   speak(cleanTextForTTS(reply));
 }
 
@@ -133,7 +130,7 @@ function cleanTextForTTS(raw) {
   return cleaned;
 }
 
-// ElevenLabs Text-to-Speech with fallback (via Netlify Function)
+// --- REIMPLEMENTED speak function to call Netlify proxy ---
 async function speak(text) {
   const voiceId = "9PSFVIeBFh3iQoQKBzQF";
 
@@ -144,8 +141,8 @@ async function speak(text) {
       body: JSON.stringify({
         text: text,
         voiceId: voiceId,
-        model_id: "eleven_monolingual_v1",
-        voice_settings: { stability: 0.3, similarity_boost: 0.75 }
+        modelId: "eleven_monolingual_v1",
+        voiceSettings: { stability: 0.3, similarity_boost: 0.75 }
       })
     });
 
